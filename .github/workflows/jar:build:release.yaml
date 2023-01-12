@@ -1,0 +1,62 @@
+name: jar:build:release
+
+on:
+  workflow_call:
+    secrets:
+      PLANTON_CLOUD_SERVICE_CLIENT_ID:
+        required: true
+      PLANTON_CLOUD_SERVICE_CLIENT_SECRET:
+        required: true
+    inputs:
+      PLANTON_CLOUD_SERVICE_CLI_ENV:
+        required: true
+        type: string
+      PLANTON_CLOUD_ARTIFACT_STORE_ID:
+        required: true
+        type: string
+      PLANTON_CLOUD_PRODUCT_ID:
+        required: true
+        type: string
+      PLANTON_CLOUD_ARTIFACT_STORE_MAVEN_REPO_URL:
+        required: true
+        type: string
+      MAVEN_PACKAGE_VERSION:
+        required: true
+        type: string
+
+jobs:
+  build-code:
+    runs-on: ubuntu-latest
+    name: java build
+    steps:
+      - uses: actions/checkout@v3
+      - uses: plantoncloud/gh-action-build-java@main
+        with:
+          planton_cloud_service_cli_env: ${{ inputs.PLANTON_CLOUD_SERVICE_CLI_ENV }}
+          planton_cloud_service_client_id: ${{ secrets.PLANTON_CLOUD_SERVICE_CLIENT_ID }}
+          planton_cloud_service_client_secret: ${{ secrets.PLANTON_CLOUD_SERVICE_CLIENT_SECRET }}
+          planton_cloud_artifact_store_id: ${{ inputs.PLANTON_CLOUD_ARTIFACT_STORE_ID }}
+          planton_cloud_product_id: ${{ inputs.PLANTON_CLOUD_PRODUCT_ID }}
+          planton_cloud_artifact_store_maven_repo_url: ${{ inputs.PLANTON_CLOUD_ARTIFACT_STORE_MAVEN_REPO_URL }}
+      - name: upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-directory
+          path: build/
+          if-no-files-found: error
+
+  release-jar:
+    runs-on: ubuntu-latest
+    name: publish jar
+    needs: build-code
+    steps:
+      - uses: actions/checkout@v3
+      - uses: plantoncloud/gh-action-release-maven-package@main
+        with:
+          planton_cloud_service_cli_env: ${{ inputs.PLANTON_CLOUD_SERVICE_CLI_ENV }}
+          planton_cloud_service_client_id: ${{ secrets.PLANTON_CLOUD_SERVICE_CLIENT_ID }}
+          planton_cloud_service_client_secret: ${{ secrets.PLANTON_CLOUD_SERVICE_CLIENT_SECRET }}
+          planton_cloud_artifact_store_id: ${{ inputs.PLANTON_CLOUD_ARTIFACT_STORE_ID }}
+          planton_cloud_product_id: ${{ inputs.PLANTON_CLOUD_PRODUCT_ID }}
+          planton_cloud_artifact_store_maven_repo_url: ${{ inputs.PLANTON_CLOUD_ARTIFACT_STORE_MAVEN_REPO_URL }}
+          maven_package_version: ${{ inputs.MAVEN_PACKAGE_VERSION }}
