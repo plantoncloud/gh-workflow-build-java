@@ -41,21 +41,3 @@ jobs:
           name: build-directory
           path: build/
           if-no-files-found: error
-
-  release-jar:
-    runs-on: ubuntu-latest
-    name: publish jar
-    # https://github.com/orgs/community/discussions/25911
-    if: startsWith(github.event.ref, 'refs/tags/v')
-    needs: build-code
-    steps:
-      - uses: actions/checkout@v3
-      - uses: plantoncloud/gh-action-release-maven-package@main
-        with:
-          planton_cloud_service_cli_env: live
-          planton_cloud_service_client_id: ${{ secrets.PLANTON_CLOUD_SERVICE_CLIENT_ID }}
-          planton_cloud_service_client_secret: ${{ secrets.PLANTON_CLOUD_SERVICE_CLIENT_SECRET }}
-          planton_cloud_artifact_store_id: afs-leftbin-play-uc1
-          planton_cloud_product_id: leftbin-play
-          planton_cloud_artifact_store_maven_repo_url: artifactregistry://us-central1-maven.pkg.dev/planton-shared-services-lo/afs-leftbin-play-uc1-maven
-          maven_package_version: ${{ github.ref_name }}
